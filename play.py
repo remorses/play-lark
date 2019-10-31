@@ -1,4 +1,5 @@
 from collections import defaultdict
+from toposort import toposort, toposort_flatten
 from lark import Lark, Tree, Transformer
 from lark.indenter import Indenter
 
@@ -39,22 +40,21 @@ def play():
     ]
 
 class GetDependencies(Transformer):
-    dependencies = defaultdict(list)
+    dependencies = defaultdict(set)
     def start(self, children):
         for k, v in self.dependencies.items():
-            for x in v:
-                if x in self.dependencies:
-                    print('ok')
-                    self.dependencies[k] += self.dependencies[x]
+            to_process = [x for x in v if x in self.dependencies]
+            for x in to_process:
+                self.dependencies[k].update(self.dependencies[x])
         return Tree('start', children)
-        
+
     def tree(self, children):
         if not children:
             return Tree('tree', [])
         this = str(children[0])
         for child in children[1:]:
             name = child.children[0]
-            self.dependencies[str(name)] += [this]
+            self.dependencies[str(name)].add(this)
         return Tree('tree', children)
 
 
@@ -70,6 +70,7 @@ def test():
     t = s.transform(t)
     print(t.pretty())
     print(s.dependencies)
+    print(list(toposort(s.dependencies)))
 
 if __name__ == '__main__':
     test()
