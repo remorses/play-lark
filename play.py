@@ -15,8 +15,8 @@ tree_grammar = r"""
 
 class TreeIndenter(Indenter):
     NL_type = '_NL'
-    OPEN_PAREN_types = []
-    CLOSE_PAREN_types = []
+    OPEN_PAREN_types: list = []
+    CLOSE_PAREN_types: list = []
     INDENT_type = '_INDENT'
     DEDENT_type = '_DEDENT'
     tab_len = 8
@@ -40,7 +40,7 @@ def play():
     ]
 
 class GetDependencies(Transformer):
-    dependencies = defaultdict(set)
+    dependencies: defaultdict = defaultdict(set)
     def start(self, children):
         for k, v in self.dependencies.items():
             to_process = [x for x in v if x in self.dependencies]
