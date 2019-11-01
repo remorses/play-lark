@@ -14,15 +14,17 @@ tree_grammar = r"""
     _NL: /(\r?\n[\t ]*)+/
 """
 
+
 class TreeIndenter(Indenter):
-    NL_type = '_NL'
+    NL_type = "_NL"
     OPEN_PAREN_types: list = []
     CLOSE_PAREN_types: list = []
-    INDENT_type = '_INDENT'
-    DEDENT_type = '_DEDENT'
+    INDENT_type = "_INDENT"
+    DEDENT_type = "_DEDENT"
     tab_len = 8
 
-parser = Lark(tree_grammar, parser='lalr', postlex=TreeIndenter())
+
+parser = Lark(tree_grammar, parser="lalr", postlex=TreeIndenter())
 
 test_tree = """
 a
@@ -37,9 +39,9 @@ a
 """
 
 
-
 class GetDependencies(Transformer):
     dependencies: defaultdict = defaultdict(OrderedSet)
+
     def start(self, children):
         ordered_deps = list(toposort_flatten(self.dependencies_as_sets))
         for k in ordered_deps:
@@ -47,7 +49,7 @@ class GetDependencies(Transformer):
             to_process = [x for x in v if x in self.dependencies]
             for x in to_process:
                 self.dependencies[k].update(self.dependencies[x])
-        return Tree('start', children)
+        return Tree("start", children)
 
     @property
     def dependencies_as_sets(self,):
@@ -55,12 +57,12 @@ class GetDependencies(Transformer):
 
     def tree(self, children):
         if not children:
-            return Tree('tree', [])
+            return Tree("tree", [])
         this = str(children[0])
         for child in children[1:]:
             name = child.children[0]
             self.dependencies[str(name)].add(this)
-        return Tree('tree', children)
+        return Tree("tree", children)
 
 
 def test():
@@ -74,8 +76,9 @@ def test():
     s = GetDependencies()
     t = s.transform(t)
     print(t.pretty())
-    print(s.dependencies['e'])
+    print(s.dependencies["e"])
     print(list(toposort(s.dependencies_as_sets)))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test()
