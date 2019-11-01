@@ -2,6 +2,7 @@ from collections import defaultdict
 from toposort import toposort, toposort_flatten
 from lark import Lark, Tree, Transformer
 from lark.indenter import Indenter
+from orderedset import OrderedSet
 
 tree_grammar = r"""
     start: _NL* tree
@@ -31,22 +32,26 @@ a
         e
     f
         g
+            x
+                y
 """
 
-def play():
-    a, b, c, d = 'a', 'b', 'c', 'd'
-    deps = [
-        {a: []}
-    ]
+
 
 class GetDependencies(Transformer):
-    dependencies: defaultdict = defaultdict(set)
+    dependencies: defaultdict = defaultdict(OrderedSet)
     def start(self, children):
-        for k, v in self.dependencies.items():
+        ordered_deps = list(toposort_flatten(self.dependencies_as_sets))
+        for k in ordered_deps:
+            v = self.dependencies[k]
             to_process = [x for x in v if x in self.dependencies]
             for x in to_process:
                 self.dependencies[k].update(self.dependencies[x])
         return Tree('start', children)
+
+    @property
+    def dependencies_as_sets(self,):
+        return {k: set(v) for k, v in self.dependencies.items()}
 
     def tree(self, children):
         if not children:
@@ -69,8 +74,8 @@ def test():
     s = GetDependencies()
     t = s.transform(t)
     print(t.pretty())
-    print(s.dependencies)
-    print(list(toposort(s.dependencies)))
+    print(s.dependencies['e'])
+    print(list(toposort(s.dependencies_as_sets)))
 
 if __name__ == '__main__':
     test()
